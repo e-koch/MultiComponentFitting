@@ -35,7 +35,34 @@ def minicube_model(xax,
     if force_positive:
         model[model<0] = 0
 
-    return model
+    return model, np.dstack([amps, centers, sigmas])
+
+
+def minicube_gaussmodel(xax,
+                        amp, amp_sigma, amp_cen,
+                        center, centerdx, centerdy,
+                        sigma, sigmadx, sigmady,
+                        npix=3,
+                        func=gaussian,
+                        force_positive=True,
+                        ):
+
+    yy, xx = np.indices([npix, npix], dtype='float')
+
+    rr = np.sqrt((yy - amp_cen[0])**2 + (xx - amp_cen[1])**2)
+    amps = gaussian(rr, amp, 0., amp_sigma)
+
+    centers = plane(xx, yy, center, centerdx, centerdy,
+                    xcen=npix // 2, ycen=npix // 2)
+    sigmas = plane(xx, yy, sigma, sigmadx, sigmady,
+                   xcen=npix // 2, ycen=npix // 2)
+
+    model = func(xax[:, None, None], amps, centers, sigmas)
+
+    if force_positive:
+        model[model < 0] = 0
+
+    return model, np.dstack([amps, centers, sigmas])
 
 
 def multicomp_minicube_model_generator(npix=3, func=gaussian, ncomps=1):
